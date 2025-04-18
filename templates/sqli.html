@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}SQLi Demo - Bug Bounty Lab{% endblock %}
+{% block content %}
+<h2 class="mb-3">SQL Injection Demo</h2>
+<form method="POST">
+  <div class="mb-3">
+    <label class="form-label">Search by Username:</label>
+    <input type="text" name="username" class="form-control" placeholder="Try: ' OR '1'='1" required>
+  </div>
+  <button type="submit" class="btn btn-danger">Search</button>
+</form>
+
+{% if result %}
+  <div class="mt-4">
+    <h5>Results:</h5>
+    <ul class="list-group">
+      {% for row in result %}
+        <li class="list-group-item">{{ row[1] }} : {{ row[2] }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+{% elif result is not none %}
+  <p class="text-muted mt-3">No results found.</p>
+{% endif %}
+{% endblock %}

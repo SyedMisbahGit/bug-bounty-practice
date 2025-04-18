@@ -42,12 +42,36 @@ def login():
     c = conn.cursor()
     c.execute(f"SELECT * FROM users WHERE username='{username}' AND password='{password}'")
     user = c.fetchone()
-    conn.close()
+    conn.close()  # Fixed indentation here
 
     if user:
         return "Login Successful"
     else:
         return "Invalid credentials"
+
+@app.route("/sqli", methods=["GET", "POST"])
+def sqli():
+    result = None
+    if request.method == "POST":
+        username = request.form.get("username")
+
+        # INSECURE SQL Query (VULNERABLE!)
+        conn = sqlite3.connect("vulnerable.db")
+        cursor = conn.cursor()
+        try:
+            query = f"SELECT * FROM users WHERE username = '{username}'"
+            cursor.execute(query)
+            rows = cursor.fetchall()
+            if rows:
+                result = f"User '{username}' found! (🔓 Vulnerable!)"
+            else:
+                result = "No such user."
+        except Exception as e:
+            result = f"Error: {e}"
+        finally:
+            conn.close()
+
+    return render_template("sqli.html", result=result)
 
 @app.route('/csrf-demo', methods=['GET', 'POST'])
 def csrf_demo():
@@ -55,10 +79,19 @@ def csrf_demo():
         return "CSRF attack successful!"
     return render_template('csrf.html')
 
+
 @app.route('/xss-demo', methods=['GET', 'POST'])
 def xss_demo():
     if request.method == 'POST':
-        return f"Hello, {request.form['username']}!<br>Your message: {request.form['message']}"
+        username = request.form.get('username')  # Use .get() to avoid KeyError
+        message = request.form.get('message')
+
+        if not username or not message:
+            flash("Both username and message are required!", "danger")
+            return render_template('xss.html')
+
+        return f"Hello, {username}!<br>Your message: {message}"
+
     return render_template('xss.html')
 
 if __name__ == '__main__':
